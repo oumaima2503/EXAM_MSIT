@@ -7,14 +7,28 @@ import lombok.NoArgsConstructor;
 import java.util.Objects;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+
+
 public class VideoDto {
 	private String id;
+
+	public VideoDto() {
+	}
+
 	private String title;
 	private String description;
 	private String url;
 	private int durationSeconds;
+
+	public VideoDto(String id, String title, String url, String description, int durationSeconds, CreatorDto creator) {
+		this.id = id;
+		this.title = title;
+		this.url = url;
+		this.description = description;
+		this.durationSeconds = durationSeconds;
+		this.creator = creator;
+	}
+
 	private CreatorDto creator;
 
 	public String getId() { return id; }

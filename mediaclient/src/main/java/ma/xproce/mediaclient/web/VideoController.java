@@ -2,46 +2,45 @@ package ma.xproce.mediaclient.web;
 
 import ma.xproce.mediaclient.dto.UploadVideoRequestDto;
 import ma.xproce.mediaclient.dto.VideoDto;
-import ma.xproce.mediaclient.dto.VideoStreamDto;
-import ma.xproce.mediaclient.service.CreatorServiceClient;
 import ma.xproce.mediaclient.service.VideoServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
 @RequestMapping("/api")
+@RestController("videoControllerOld")  // <-- Ajouter un nom unique
 public class VideoController {
-
 	@Autowired
 	private VideoServiceClient videoServiceClient;
 
-	@Autowired
-	private CreatorServiceClient creatorServiceClient;
-
+	// Upload une vidéo avec les données fournie en JSON
 	@PostMapping("/videos")
 	public ResponseEntity<VideoDto> uploadVideo(@RequestBody UploadVideoRequestDto req) {
-		VideoDto created = videoServiceClient.uploadVideo(req);
-		return ResponseEntity.ok(created);
+		try {
+			VideoDto videoDto = videoServiceClient.uploadVideo(req);
+			System.out.println("Video uploaded: " + videoDto);
+			return ResponseEntity.ok(videoDto);
+		} catch (Exception ex) {
+			System.err.println("Error uploading video: " + ex.getMessage());
+			return ResponseEntity.status(500).build();
+		}
 	}
 
+	// Récupère une vidéo par id
 	@GetMapping("/videos/{id}")
 	public ResponseEntity<VideoDto> getVideo(@PathVariable String id) {
-		VideoDto v = videoServiceClient.getVideo(id);
-		if (v == null) return ResponseEntity.notFound().build();
-		return ResponseEntity.ok(v);
-	}
-
-	@GetMapping("/creators/{id}")
-	public ResponseEntity<?> getCreator(@PathVariable String id) {
-		var c = creatorServiceClient.getCreator(id);
-		if (c == null) return ResponseEntity.notFound().build();
-		return ResponseEntity.ok(c);
-	}
-
-	@GetMapping("/creators/{id}/videos")
-	public ResponseEntity<VideoStreamDto> getCreatorVideos(@PathVariable String id) {
-		VideoStreamDto stream = creatorServiceClient.getCreatorVideos(id);
-		return ResponseEntity.ok(stream);
+		try {
+			VideoDto videoDto = videoServiceClient.getVideo(id);
+			if (videoDto == null) {
+				return ResponseEntity.notFound().build();
+			}
+			System.out.println("Video retrieved: " + videoDto);
+			return ResponseEntity.ok(videoDto);
+		} catch (Exception ex) {
+			System.err.println("Error retrieving video: " + ex.getMessage());
+			return ResponseEntity.status(500).build();
+		}
 	}
 }
+
+

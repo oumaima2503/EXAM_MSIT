@@ -29,6 +29,8 @@ public class VideoMapper {
 		);
 	}
 
+
+
 	// proto Creator -> DTO
 	public CreatorDto fromCreatorProtoToDto(Creator c) {
 		if (c == null) return null;
