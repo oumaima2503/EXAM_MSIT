@@ -5,9 +5,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
-@Getter
-@Setter
+
 public class CreatorNewDto {
 
     private String id;
@@ -15,7 +13,7 @@ public class CreatorNewDto {
     private String email;
 
 
-    // Getters & Setters
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 

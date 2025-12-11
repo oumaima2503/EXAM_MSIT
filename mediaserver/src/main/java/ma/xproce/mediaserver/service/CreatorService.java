@@ -17,13 +17,13 @@ import java.util.stream.Collectors;
 @GrpcService
 public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 
-	// Stockage en mémoire thread-safe : id -> Creator (proto)
+	// Stockage en mémoire  Creator (proto)
 	private final Map<String, Creator> creators = new ConcurrentHashMap<>();
 
 	// Stockage vidéos par creatorId
 	private final Map<String, List<Video>> videosByCreator = new ConcurrentHashMap<>();
 
-	// Méthode utilitaire pour créer un creator (peut être utilisée par d'autres services/tests)
+	// Méthode utilitaire pour créer un creator
 	public Creator createCreator(String name, String email) {
 		String id = UUID.randomUUID().toString();
 		Creator c = Creator.newBuilder()
@@ -36,9 +36,9 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		return c;
 	}
 
-	// Enregistrer explicitement un Creator proto (utile si VideoService reçoit un Creator dans la requête)
+	// Enregistrer  un Creator proto
 	public void registerCreator(Creator creator) {
-		// si id absent, on crée un nouveau creator pour éviter perte d'infos
+
 		if (creator == null) return;
 		if (creator.getId() == null || creator.getId().isEmpty()) {
 			createCreator(creator.getName(), creator.getEmail());
@@ -48,19 +48,19 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		videosByCreator.putIfAbsent(creator.getId(), new CopyOnWriteArrayList<>());
 	}
 
-	// Retourne un creator existant (ou null) — méthode synchrone utile pour VideoService
+	// Retourne un creator existant _synchrone _
 	public Creator findCreator(String id) {
 		if (id == null || id.isEmpty()) return null;
 		return creators.get(id);
 	}
 
-	// Ajouter une vidéo pour le creator (utilitaire)
+	// Ajouter une vidéo pour le creator
 	public void addVideoForCreator(Video video) {
 		if (video == null || !video.hasCreator()) return;
 		String creatorId = video.getCreator().getId();
 		if (creatorId == null || creatorId.isEmpty()) return;
 		videosByCreator.computeIfAbsent(creatorId, k -> new CopyOnWriteArrayList<>()).add(video);
-		// Ensure the creator is registered minimally
+
 		creators.putIfAbsent(creatorId, video.getCreator());
 	}
 

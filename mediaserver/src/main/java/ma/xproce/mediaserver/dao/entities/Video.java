@@ -10,7 +10,7 @@ import lombok.*;
 
 @AllArgsConstructor
 public class Video {
-	// id aligné sur le proto (string UUID)
+
 	@Id
 	private String id;
 
@@ -22,7 +22,7 @@ public class Video {
 	@Column(length = 2000)
 	private String description;
 
-	// durée en secondes (proto: duration_seconds)
+
 	private int durationSeconds;
 
 	@ManyToOne
@@ -77,7 +77,7 @@ public class Video {
 		this.creator = creator;
 	}
 
-	// constructeur pratique sans id (id sera généré côté service)
+
 	public Video(String name, String url, String description, int durationSeconds, Creator creator) {
 		this.name = name;
 		this.url = url;

@@ -16,10 +16,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @GrpcService
 public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 
-	// stockage en mémoire id -> Video (proto)
+	// stockage Video (proto)
 	private final Map<String, Video> videos = new ConcurrentHashMap<>();
 
-	// réutiliser le CreatorService pour enregistrer creators / lister les vidéos par creator
+	//  enregistrer creators / lister les vidéos par creator
 	private final CreatorService creatorService;
 
 	@Autowired
@@ -44,18 +44,18 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 					.setDurationSeconds(request.getDurationSeconds());
 
 			if (request.hasCreator()) {
-				// Normaliser / compléter le creator :
+
 				var reqCreator = request.getCreator();
 				ma.xproce.mediaappgrpc.proto.Creator finalCreator = reqCreator;
 
-				// Si aucun id dans la requête -> créer un nouveau creator et utiliser celui-ci
+				// Si aucun id dans la requête  créer un nouveau creator
 				if (reqCreator.getId() == null || reqCreator.getId().isEmpty()) {
 					finalCreator = creatorService.createCreator(reqCreator.getName(), reqCreator.getEmail());
 				} else {
-					// si id fourni, essayer de récupérer les infos complètes existantes
+					// si id fourni récupérer les infos complètes existantes
 					ma.xproce.mediaappgrpc.proto.Creator existing = creatorService.findCreator(reqCreator.getId());
 					if (existing != null) {
-						// si la requête apporte des informations non vides, remplacer/mettre à jour l'enregistrement
+						// si la requête apporte des informations non vides, remplacer ou mettre à jour l'enregistrement
 						if ((!reqCreator.getName().isEmpty() && !reqCreator.getName().equals(existing.getName()))
 								|| (!reqCreator.getEmail().isEmpty() && !reqCreator.getEmail().equals(existing.getEmail()))) {
 							creatorService.registerCreator(reqCreator);
@@ -64,7 +64,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 							finalCreator = existing;
 						}
 					} else {
-						// pas d'existant => enregistrer la valeur fournie (même si incomplète)
+
 						creatorService.registerCreator(reqCreator);
 						finalCreator = reqCreator;
 					}
@@ -74,10 +74,8 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 
 			Video video = vb.build();
 
-			// stocker en mémoire
 			videos.put(id, video);
 
-			// informer le CreatorService pour maintien des index vidéos par creator
 			if (video.hasCreator()) {
 				creatorService.addVideoForCreator(video);
 			}

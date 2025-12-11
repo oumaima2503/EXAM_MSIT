@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api")
-@RestController("videoControllerOld")  // <-- Ajouter un nom unique
+@RestController("videoControllerOld")
 public class VideoController {
 	@Autowired
 	private VideoServiceClient videoServiceClient;
