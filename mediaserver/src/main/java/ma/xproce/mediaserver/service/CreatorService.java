@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
 @GrpcService
 public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 
-	// Stockage en mémoire des entités Creator
+	// Stockage des entity Creator
 	private final Map<String, ma.xproce.mediaserver.dao.entities.Creator> creatorEntities = new ConcurrentHashMap<>();
 
-	// Stockage vidéos par creatorId (entités)
+	// Stockage video par creatorId rntity
 	private final Map<String, List<ma.xproce.mediaserver.dao.entities.Video>> videoEntitiesByCreator = new ConcurrentHashMap<>();
 
 	private final CreatorMapper creatorMapper;
@@ -33,17 +33,17 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		this.videoMapper = videoMapper;
 	}
 
-	// Méthode utilitaire pour créer un creator
+	// Méthode utilitaire pour creer un creator
 	public Creator createCreator(String name, String email) {
 		String id = UUID.randomUUID().toString();
 
-		// Création de l'entité
+		// Création de l'entity
 		ma.xproce.mediaserver.dao.entities.Creator entity = new ma.xproce.mediaserver.dao.entities.Creator();
 		entity.setId(id);
 		entity.setName(name == null ? "" : name);
 		entity.setEmail(email == null ? "" : email);
 
-		// Stockage de l'entité
+		// Stockage de l'entity
 		creatorEntities.put(id, entity);
 		videoEntitiesByCreator.putIfAbsent(id, new CopyOnWriteArrayList<>());
 
@@ -66,26 +66,26 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		videoEntitiesByCreator.putIfAbsent(creator.getId(), new CopyOnWriteArrayList<>());
 	}
 
-	// Retourne un creator existant (en entité)
+
 	public ma.xproce.mediaserver.dao.entities.Creator findCreatorEntity(String id) {
 		if (id == null || id.isEmpty()) return null;
 		return creatorEntities.get(id);
 	}
 
-	// Retourne un creator existant (en proto)
+
 	public Creator findCreator(String id) {
 		ma.xproce.mediaserver.dao.entities.Creator entity = findCreatorEntity(id);
 		return entity != null ? creatorMapper.toProto(entity) : null;
 	}
 
-	// Ajouter une vidéo pour le creator (version entité)
+	// Ajouter une video pour le creator entity
 	public void addVideoForCreator(ma.xproce.mediaserver.dao.entities.Video videoEntity) {
 		if (videoEntity == null || videoEntity.getCreator() == null) return;
 
 		String creatorId = videoEntity.getCreator().getId();
 		if (creatorId == null || creatorId.isEmpty()) return;
 
-		// S'assurer que le creator existe
+
 		if (!creatorEntities.containsKey(creatorId)) {
 			creatorEntities.put(creatorId, videoEntity.getCreator());
 		}
@@ -93,11 +93,11 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		videoEntitiesByCreator.computeIfAbsent(creatorId, k -> new CopyOnWriteArrayList<>()).add(videoEntity);
 	}
 
-	// Ajouter une vidéo pour le creator (version proto)
+	// Ajouter une video pour le creator proto
 	public void addVideoForCreator(Video videoProto) {
 		if (videoProto == null || !videoProto.hasCreator()) return;
 
-		// Convertir le proto en entité
+		// Convertir le proto en entity
 		ma.xproce.mediaserver.dao.entities.Video videoEntity = videoMapper.toEntity(videoProto);
 		addVideoForCreator(videoEntity);
 	}
@@ -114,7 +114,7 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 			return;
 		}
 
-		// Conversion de l'entité vers proto
+		// Conversion de l'entité to proto
 		responseObserver.onNext(creatorMapper.toProto(entity));
 		responseObserver.onCompleted();
 	}
@@ -132,7 +132,7 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 
 		List<ma.xproce.mediaserver.dao.entities.Video> entityList = videoEntitiesByCreator.getOrDefault(id, Collections.emptyList());
 
-		// Conversion des entités en proto
+		// Conversion des entity to proto
 		List<Video> videoList = entityList.stream()
 				.map(videoMapper::toProto)
 				.collect(Collectors.toList());

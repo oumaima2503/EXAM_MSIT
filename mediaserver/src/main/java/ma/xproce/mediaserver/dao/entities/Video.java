@@ -7,10 +7,9 @@ import lombok.*;
 @Table(name = "videos")
 @ToString
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class Video {
-	// id aligné sur le proto (string UUID)
+
 	@Id
 	private String id;
 

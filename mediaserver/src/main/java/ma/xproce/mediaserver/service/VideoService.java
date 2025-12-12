@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @GrpcService
 public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 
-	// stockage Video (entités)
+	// stockage Video entity
 	private final Map<String, ma.xproce.mediaserver.dao.entities.Video> videoEntities = new ConcurrentHashMap<>();
 
 	private final CreatorService creatorService;
@@ -37,7 +37,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 				return;
 			}
 
-			// Créer l'entité Video
+			// Créer l'entity Video
 			ma.xproce.mediaserver.dao.entities.Video videoEntity = new ma.xproce.mediaserver.dao.entities.Video();
 			String videoId = UUID.randomUUID().toString();
 			videoEntity.setId(videoId);
@@ -51,7 +51,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 				ma.xproce.mediaappgrpc.proto.Creator reqCreator = request.getCreator();
 				ma.xproce.mediaserver.dao.entities.Creator creatorEntity = null;
 
-				// Si aucun id dans la requête, créer un nouveau creator
+				// Si aucun id dans la requête, creer un nouveau creator
 				if (reqCreator.getId() == null || reqCreator.getId().isEmpty()) {
 					// Créer le creator via le service
 					ma.xproce.mediaappgrpc.proto.Creator newCreatorProto = creatorService.createCreator(
@@ -76,7 +76,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 							creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
 						}
 					} else {
-						// Créer un nouveau creator avec l'ID fourni
+						// Créer un nouveau creator avec ID fourni
 						creatorService.registerCreator(reqCreator);
 						creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
 					}
@@ -85,13 +85,13 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 				videoEntity.setCreator(creatorEntity);
 			}
 
-			// Sauvegarder l'entité Video
+			// Sauvegarder l'entity Video
 			videoEntities.put(videoId, videoEntity);
 
-			// Ajouter la vidéo au creator
+			// Ajouter la video au creator
 			creatorService.addVideoForCreator(videoEntity);
 
-			// Convertir en proto pour la réponse
+			// Convertir en proto pour la reponse
 			Video videoProto = videoMapper.toProto(videoEntity);
 			responseObserver.onNext(videoProto);
 			responseObserver.onCompleted();
@@ -122,7 +122,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 				return;
 			}
 
-			// Convertir l'entité en proto
+			// Convertir entity to proto
 			Video videoProto = videoMapper.toProto(videoEntity);
 			responseObserver.onNext(videoProto);
 			responseObserver.onCompleted();

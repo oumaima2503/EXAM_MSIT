@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CreatorMapper {
 
-	// proto -> entity
+	// proto to entity
 	public ma.xproce.mediaserver.dao.entities.Creator toEntity(Creator proto) {
 		if (proto == null) return null;
 		ma.xproce.mediaserver.dao.entities.Creator e = new ma.xproce.mediaserver.dao.entities.Creator();
@@ -20,7 +20,7 @@ public class CreatorMapper {
 		return e;
 	}
 
-	// entity -> proto
+	// entity to proto
 	public Creator toProto(ma.xproce.mediaserver.dao.entities.Creator e) {
 		if (e == null) return Creator.getDefaultInstance();
 		return Creator.newBuilder()

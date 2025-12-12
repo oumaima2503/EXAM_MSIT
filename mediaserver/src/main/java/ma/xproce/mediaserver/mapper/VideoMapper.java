@@ -14,7 +14,7 @@ public class VideoMapper {
 		this.creatorMapper = creatorMapper;
 	}
 
-	// Proto Video -> Video entity
+	// Proto Video to Video entity
 	public Video toEntity(ma.xproce.mediaappgrpc.proto.Video proto) {
 		if (proto == null) return null;
 		Video entity = new Video();
@@ -29,7 +29,7 @@ public class VideoMapper {
 		return entity;
 	}
 
-	// Video entity -> proto Video
+	// Video entity to proto Video
 	public ma.xproce.mediaappgrpc.proto.Video toProto(Video e) {
 		if (e == null) return ma.xproce.mediaappgrpc.proto.Video.getDefaultInstance();
 		ma.xproce.mediaappgrpc.proto.Video.Builder b = ma.xproce.mediaappgrpc.proto.Video.newBuilder()
