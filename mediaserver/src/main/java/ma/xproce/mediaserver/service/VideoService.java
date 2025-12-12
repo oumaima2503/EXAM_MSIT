@@ -6,8 +6,8 @@ import ma.xproce.mediaappgrpc.proto.UploadVideoRequest;
 import ma.xproce.mediaappgrpc.proto.Video;
 import ma.xproce.mediaappgrpc.proto.VideoIdRequest;
 import ma.xproce.mediaappgrpc.proto.VideoServiceGrpc;
+import ma.xproce.mediaserver.mapper.VideoMapper;
 import net.devh.boot.grpc.server.service.GrpcService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 import java.util.UUID;
@@ -16,74 +16,91 @@ import java.util.concurrent.ConcurrentHashMap;
 @GrpcService
 public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 
-	// stockage Video (proto)
-	private final Map<String, Video> videos = new ConcurrentHashMap<>();
+	// stockage Video (entités)
+	private final Map<String, ma.xproce.mediaserver.dao.entities.Video> videoEntities = new ConcurrentHashMap<>();
 
-	//  enregistrer creators / lister les vidéos par creator
 	private final CreatorService creatorService;
+	private final VideoMapper videoMapper;
 
-	@Autowired
-	public VideoService(CreatorService creatorService) {
+	public VideoService(CreatorService creatorService, VideoMapper videoMapper) {
 		this.creatorService = creatorService;
+		this.videoMapper = videoMapper;
 	}
 
 	@Override
 	public void uploadVideo(UploadVideoRequest request, StreamObserver<Video> responseObserver) {
 		try {
 			if (request == null) {
-				responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Request is null").asRuntimeException());
+				responseObserver.onError(Status.INVALID_ARGUMENT
+						.withDescription("Request is null")
+						.asRuntimeException());
 				return;
 			}
 
-			String id = UUID.randomUUID().toString();
-			Video.Builder vb = Video.newBuilder()
-					.setId(id)
-					.setTitle(request.getTitle() == null ? "" : request.getTitle())
-					.setDescription(request.getDescription() == null ? "" : request.getDescription())
-					.setUrl(request.getUrl() == null ? "" : request.getUrl())
-					.setDurationSeconds(request.getDurationSeconds());
+			// Créer l'entité Video
+			ma.xproce.mediaserver.dao.entities.Video videoEntity = new ma.xproce.mediaserver.dao.entities.Video();
+			String videoId = UUID.randomUUID().toString();
+			videoEntity.setId(videoId);
+			videoEntity.setTitle(request.getTitle() == null ? "" : request.getTitle());
+			videoEntity.setDescription(request.getDescription() == null ? "" : request.getDescription());
+			videoEntity.setUrl(request.getUrl() == null ? "" : request.getUrl());
+			videoEntity.setDurationSeconds(request.getDurationSeconds());
 
+			// Gestion du creator
 			if (request.hasCreator()) {
+				ma.xproce.mediaappgrpc.proto.Creator reqCreator = request.getCreator();
+				ma.xproce.mediaserver.dao.entities.Creator creatorEntity = null;
 
-				var reqCreator = request.getCreator();
-				ma.xproce.mediaappgrpc.proto.Creator finalCreator = reqCreator;
-
-				// Si aucun id dans la requête  créer un nouveau creator
+				// Si aucun id dans la requête, créer un nouveau creator
 				if (reqCreator.getId() == null || reqCreator.getId().isEmpty()) {
-					finalCreator = creatorService.createCreator(reqCreator.getName(), reqCreator.getEmail());
+					// Créer le creator via le service
+					ma.xproce.mediaappgrpc.proto.Creator newCreatorProto = creatorService.createCreator(
+							reqCreator.getName(),
+							reqCreator.getEmail());
+					creatorEntity = creatorService.findCreatorEntity(newCreatorProto.getId());
 				} else {
-					// si id fourni récupérer les infos complètes existantes
-					ma.xproce.mediaappgrpc.proto.Creator existing = creatorService.findCreator(reqCreator.getId());
-					if (existing != null) {
-						// si la requête apporte des informations non vides, remplacer ou mettre à jour l'enregistrement
-						if ((!reqCreator.getName().isEmpty() && !reqCreator.getName().equals(existing.getName()))
-								|| (!reqCreator.getEmail().isEmpty() && !reqCreator.getEmail().equals(existing.getEmail()))) {
-							creatorService.registerCreator(reqCreator);
-							finalCreator = reqCreator;
-						} else {
-							finalCreator = existing;
+					// Récupérer le creator existant
+					creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
+
+					if (creatorEntity != null) {
+						// Vérifier si les informations doivent être mises à jour
+						if ((!reqCreator.getName().isEmpty() && !reqCreator.getName().equals(creatorEntity.getName()))
+								|| (!reqCreator.getEmail().isEmpty() && !reqCreator.getEmail().equals(creatorEntity.getEmail()))) {
+							// Mettre à jour le creator
+							ma.xproce.mediaappgrpc.proto.Creator updatedCreatorProto = ma.xproce.mediaappgrpc.proto.Creator.newBuilder()
+									.setId(reqCreator.getId())
+									.setName(reqCreator.getName())
+									.setEmail(reqCreator.getEmail())
+									.build();
+							creatorService.registerCreator(updatedCreatorProto);
+							creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
 						}
 					} else {
-
+						// Créer un nouveau creator avec l'ID fourni
 						creatorService.registerCreator(reqCreator);
-						finalCreator = reqCreator;
+						creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
 					}
 				}
-				vb.setCreator(finalCreator);
+
+				videoEntity.setCreator(creatorEntity);
 			}
 
-			Video video = vb.build();
+			// Sauvegarder l'entité Video
+			videoEntities.put(videoId, videoEntity);
 
-			videos.put(id, video);
+			// Ajouter la vidéo au creator
+			creatorService.addVideoForCreator(videoEntity);
 
-			if (video.hasCreator()) {
-				creatorService.addVideoForCreator(video);
-			}
-
-			responseObserver.onNext(video);
+			// Convertir en proto pour la réponse
+			Video videoProto = videoMapper.toProto(videoEntity);
+			responseObserver.onNext(videoProto);
 			responseObserver.onCompleted();
+
 		} catch (Exception ex) {
-			responseObserver.onError(Status.INTERNAL.withDescription(ex.getMessage()).withCause(ex).asRuntimeException());
+			responseObserver.onError(Status.INTERNAL
+					.withDescription(ex.getMessage())
+					.withCause(ex)
+					.asRuntimeException());
 		}
 	}
 
@@ -91,18 +108,30 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 	public void getVideo(VideoIdRequest request, StreamObserver<Video> responseObserver) {
 		try {
 			if (request == null || request.getId() == null || request.getId().isEmpty()) {
-				responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("id is required").asRuntimeException());
+				responseObserver.onError(Status.INVALID_ARGUMENT
+						.withDescription("id is required")
+						.asRuntimeException());
 				return;
 			}
-			Video v = videos.get(request.getId());
-			if (v == null) {
-				responseObserver.onError(Status.NOT_FOUND.withDescription("Video not found for id: " + request.getId()).asRuntimeException());
+
+			ma.xproce.mediaserver.dao.entities.Video videoEntity = videoEntities.get(request.getId());
+			if (videoEntity == null) {
+				responseObserver.onError(Status.NOT_FOUND
+						.withDescription("Video not found for id: " + request.getId())
+						.asRuntimeException());
 				return;
 			}
-			responseObserver.onNext(v);
+
+			// Convertir l'entité en proto
+			Video videoProto = videoMapper.toProto(videoEntity);
+			responseObserver.onNext(videoProto);
 			responseObserver.onCompleted();
+
 		} catch (Exception ex) {
-			responseObserver.onError(Status.INTERNAL.withDescription(ex.getMessage()).withCause(ex).asRuntimeException());
+			responseObserver.onError(Status.INTERNAL
+					.withDescription(ex.getMessage())
+					.withCause(ex)
+					.asRuntimeException());
 		}
 	}
 }
