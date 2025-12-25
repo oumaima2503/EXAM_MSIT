@@ -88,7 +88,7 @@ public class Video {
 		this.creator = creator;
 	}
 
-	// constructeur pratique sans id (id sera généré côté service)
+
 	public Video(String title, String url, String description, int durationSeconds, Creator creator) {
 		this.title = title;
 		this.url = url;

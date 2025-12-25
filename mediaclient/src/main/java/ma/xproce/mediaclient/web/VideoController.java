@@ -13,7 +13,7 @@ public class VideoController {
 	@Autowired
 	private VideoServiceClient videoServiceClient;
 
-	// Upload une vidéo avec les données fournie en JSON
+	// Upload  vidéo
 	@PostMapping("/videos")
 	public ResponseEntity<VideoDto> uploadVideo(@RequestBody UploadVideoRequestDto req) {
 		try {

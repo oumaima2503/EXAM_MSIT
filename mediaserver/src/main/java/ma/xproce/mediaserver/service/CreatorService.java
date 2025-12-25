@@ -33,7 +33,7 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		this.videoMapper = videoMapper;
 	}
 
-	// Méthode utilitaire pour creer un creator
+	//  creer un creator
 	public Creator createCreator(String name, String email) {
 		String id = UUID.randomUUID().toString();
 
@@ -47,7 +47,7 @@ public class CreatorService extends CreatorServiceGrpc.CreatorServiceImplBase {
 		creatorEntities.put(id, entity);
 		videoEntitiesByCreator.putIfAbsent(id, new CopyOnWriteArrayList<>());
 
-		// Conversion en proto pour le retour
+		// Conversion to proto pour le retour
 		return creatorMapper.toProto(entity);
 	}
 

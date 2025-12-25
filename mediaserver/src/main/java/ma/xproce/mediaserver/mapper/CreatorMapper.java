@@ -11,7 +11,7 @@ public class CreatorMapper {
 	public ma.xproce.mediaserver.dao.entities.Creator toEntity(Creator proto) {
 		if (proto == null) return null;
 		ma.xproce.mediaserver.dao.entities.Creator e = new ma.xproce.mediaserver.dao.entities.Creator();
-		// keep proto id if present (JPA expects String id)
+		// garde proto id if present
 		if (proto.getId() != null && !proto.getId().isEmpty()) {
 			e.setId(proto.getId());
 		}

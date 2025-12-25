@@ -51,7 +51,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 				ma.xproce.mediaappgrpc.proto.Creator reqCreator = request.getCreator();
 				ma.xproce.mediaserver.dao.entities.Creator creatorEntity = null;
 
-				// Si aucun id dans la requête, creer un nouveau creator
+				//  creer un nouveau creator if  aucun id dans la requête
 				if (reqCreator.getId() == null || reqCreator.getId().isEmpty()) {
 					// Créer le creator via le service
 					ma.xproce.mediaappgrpc.proto.Creator newCreatorProto = creatorService.createCreator(
@@ -63,7 +63,7 @@ public class VideoService extends VideoServiceGrpc.VideoServiceImplBase {
 					creatorEntity = creatorService.findCreatorEntity(reqCreator.getId());
 
 					if (creatorEntity != null) {
-						// Vérifier si les informations doivent être mises à jour
+						// Vérifier if les infos doivent être mises à jour
 						if ((!reqCreator.getName().isEmpty() && !reqCreator.getName().equals(creatorEntity.getName()))
 								|| (!reqCreator.getEmail().isEmpty() && !reqCreator.getEmail().equals(creatorEntity.getEmail()))) {
 							// Mettre à jour le creator
